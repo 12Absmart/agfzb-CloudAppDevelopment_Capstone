@@ -1,34 +1,88 @@
 import requests
 import json
-# import related models here
 from requests.auth import HTTPBasicAuth
+from django.http import HttpResponse
+from .models import CarDealer, DealerReview
 
 
-# Create a `get_request` to make HTTP GET requests
-# e.g., response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
-#                                     auth=HTTPBasicAuth('apikey', api_key))
+# Define global constants
+API_KEY = 'klrYHIbvrBFwi-BzzoUYVVHMkVyg7GpIRiC5gpXMSm_y'
+CF_BASE_URL = 'https://us-south.functions.appdomain.cloud/api/v1/web/f528e3f2-7dfd-470f-8566-800cb95418ac/dealership-package'
 
+# Define get_request function
+def get_request(url, params=None, headers=None, auth=None):
+    response = requests.get(url, params=params, headers=headers, auth=auth)
+    return response
 
-# Create a `post_request` to make HTTP POST requests
-# e.g., response = requests.post(url, params=kwargs, json=payload)
+# Define post_request function
+def post_request(url, params=None, json_data=None):
+    response = requests.post(url, params=params, json=json_data)
+    return response
 
+# Define get_dealers_from_cf function
+def get_dealers_from_cf(url, **kwargs):
+    results = []
+    response = get_request(url, params=kwargs)
+    
+    if response.status_code == 200:
+        json_result = response.json()
+        dealers_data = json_result.get("rows", [])
+        
+        for dealer_data in dealers_data:
+            dealer_doc = dealer_data.get("doc", {})
+            dealer_obj = CarDealer(
+                address=dealer_doc.get("address", ""),
+                city=dealer_doc.get("city", ""),
+                full_name=dealer_doc.get("full_name", ""),
+                id=dealer_doc.get("id", ""),
+                lat=dealer_doc.get("lat", ""),
+                long=dealer_doc.get("long", ""),
+                short_name=dealer_doc.get("short_name", ""),
+                st=dealer_doc.get("st", ""),
+                zip=dealer_doc.get("zip", "")
+            )
+            results.append(dealer_obj)
+    
+    return results
 
-# Create a get_dealers_from_cf method to get dealers from a cloud function
-# def get_dealers_from_cf(url, **kwargs):
-# - Call get_request() with specified arguments
-# - Parse JSON results into a CarDealer object list
+# Define get_dealer_reviews_from_cf function
+def get_dealer_reviews_from_cf(url, dealer_id):
+    results = []
+    response = get_request(url, params={"dealerId": dealer_id})
+    
+    if response.status_code == 200:
+        json_result = response.json()
+        reviews_data = json_result.get("reviews", [])
+        
+        for review_data in reviews_data:
+            review_obj = DealerReview(
+                dealership=review_data.get("dealership", ""),
+                name=review_data.get("name", ""),
+                purchase=review_data.get("purchase", ""),
+                review=review_data.get("review", ""),
+                purchase_date=review_data.get("purchase_date", "")
+            )
+            results.append(review_obj)
+    
+    return results
 
+# Define analyze_review_sentiments function
+def analyze_review_sentiments(text):
+    url = f'{CF_BASE_URL}/analyze-sentiment'  # Replace with the correct route
+    payload = {'text': text}
+    response = post_request(url, json_data=payload)
+    
+    if response.status_code == 200:
+        sentiment_data = response.json()
+        sentiment_label = sentiment_data.get('sentiment_label', 'Unknown')
+        return sentiment_label
+    else:
+        return 'Unknown'
 
-# Create a get_dealer_reviews_from_cf method to get reviews by dealer id from a cloud function
-# def get_dealer_by_id_from_cf(url, dealerId):
-# - Call get_request() with specified arguments
-# - Parse JSON results into a DealerView object list
-
-
-# Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
-# def analyze_review_sentiments(text):
-# - Call get_request() with specified arguments
-# - Get the returned sentiment label such as Positive or Negative
-
-
-
+# Define get_dealerships view method
+def get_dealerships(request):
+    if request.method == "GET":
+        url = f'{CF_BASE_URL}/get-dealership'  # Replace with the correct route
+        dealerships = get_dealers_from_cf(url)
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        return HttpResponse(dealer_names)
