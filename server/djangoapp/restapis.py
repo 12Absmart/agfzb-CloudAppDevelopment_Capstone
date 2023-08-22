@@ -19,6 +19,7 @@ def post_request(url, params=None, json_data=None):
     response = requests.post(url, params=params, json=json_data)
     return response
 
+
 # Define get_dealers_from_cf function
 def get_dealers_from_cf(url, **kwargs):
     results = []
@@ -26,24 +27,52 @@ def get_dealers_from_cf(url, **kwargs):
     
     if response.status_code == 200:
         json_result = response.json()
-        dealers_data = json_result.get("rows", [])
+        dealers_data = json_result.get("dealerships", [])  # Change "rows" to "dealerships"
         
         for dealer_data in dealers_data:
-            dealer_doc = dealer_data.get("doc", {})
             dealer_obj = CarDealer(
-                address=dealer_doc.get("address", ""),
-                city=dealer_doc.get("city", ""),
-                full_name=dealer_doc.get("full_name", ""),
-                id=dealer_doc.get("id", ""),
-                lat=dealer_doc.get("lat", ""),
-                long=dealer_doc.get("long", ""),
-                short_name=dealer_doc.get("short_name", ""),
-                st=dealer_doc.get("st", ""),
-                zip=dealer_doc.get("zip", "")
+                address=dealer_data.get("address", ""),
+                city=dealer_data.get("city", ""),
+                full_name=dealer_data.get("full_name", ""),
+                id=dealer_data.get("id", ""),
+                lat=dealer_data.get("lat", ""),
+                long=dealer_data.get("long", ""),
+                short_name=dealer_data.get("short_name", ""),
+                st=dealer_data.get("st", ""),
+                zip=dealer_data.get("zip", "")
             )
             results.append(dealer_obj)
     
     return results
+
+
+
+
+
+def get_dealerships(request):
+    url = f'{CF_BASE_URL}/get-dealership'  # Replace with the correct route
+    dealerships = []
+    response = get_request(url)
+    
+    if response.status_code == 200:
+        json_result = response.json()
+        dealerships_data = json_result.get("rows", [])
+        
+        for dealer_data in dealerships_data:
+            dealer_doc = dealer_data.get("doc", {})
+            dealer_obj = {
+                'id': dealer_doc.get("id", ""),
+                'full_name': dealer_doc.get("full_name", ""),
+                'city': dealer_doc.get("city", ""),
+                'address': dealer_doc.get("address", ""),
+                 'zip': dealer_doc.get("zip", ""),
+                'st': dealer_doc.get("st", "")
+            }
+            dealerships.append(dealer_obj)
+    
+    return dealerships
+
+
 
 # Define get_dealer_reviews_from_cf function
 def get_dealer_reviews_from_cf(url, dealer_id):

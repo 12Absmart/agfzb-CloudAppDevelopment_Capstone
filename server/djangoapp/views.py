@@ -5,6 +5,7 @@ from django.contrib import messages
 from datetime import datetime
 import logging
 import json
+from .restapis import get_dealerships
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -50,14 +51,7 @@ def registration_request(request):
     return render(request, 'djangoapp/registration.html')
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
-def get_dealerships(request):
-    dealers = [
-        {'id': 1, 'name': 'Dealer 1', 'rating': 4.5},
-        {'id': 2, 'name': 'Dealer 2', 'rating': 3.8},
-        # Add more dealers as needed
-    ]
-    context = {'dealers': dealers}
-    return render(request, 'djangoapp/index.html', context)
+
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
 def get_dealer_details(request, dealer_id):

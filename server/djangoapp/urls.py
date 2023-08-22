@@ -10,7 +10,6 @@ urlpatterns = [
     # name the URL
 
     # path for about view
-    path('', views.get_dealerships, name='home'),
     
     path('about/', view=views.about, name='about'),
 

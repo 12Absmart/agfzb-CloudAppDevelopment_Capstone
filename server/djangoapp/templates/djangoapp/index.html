@@ -49,10 +49,35 @@
         </div>
     </nav>
 
-    <!-- Dealer Table -->
-    <div class="container mt-4">
-        <!-- ... Dealer table content ... -->
-    </div>
+        <!-- Dealer Table -->
+        <div class="container mt-4">
+            <h2>Dealership List</h2>
+            <table class="table table-striped" id="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Dealer Name</th>
+                        <th>City</th>
+                        <th>Address</th>
+                        <th>Zip</th>
+                        <th>State</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dealer in dealership_list %}
+                        <tr>
+                            <td>{{ dealer.id }}</td>
+                            <td><a href="{% url 'djangoapp:dealer_details' dealer.id %}">{{ dealer.full_name }}</a></td>
+                            <td>{{ dealer.city }}</td>
+                            <td>{{ dealer.address }}</td>
+                            <td>{{ dealer.zip }}</td>
+                            <td>{{ dealer.st }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    
 </body>
 <footer class="footer mt-auto py-3">
     <div class="container">
